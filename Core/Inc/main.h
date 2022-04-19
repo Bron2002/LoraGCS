@@ -37,7 +37,6 @@ extern "C" {
 #include "stm32f1xx_ll_utils.h"
 #include "stm32f1xx_ll_pwr.h"
 #include "stm32f1xx_ll_dma.h"
-#include "stm32f1xx_ll_usart.h"
 #include "stm32f1xx_ll_gpio.h"
 
 /* Private includes ----------------------------------------------------------*/
@@ -57,7 +56,8 @@ extern "C" {
 
 /* Exported macro ------------------------------------------------------------*/
 /* USER CODE BEGIN EM */
-
+#define BUTTON_EB_EG1 0x01
+#define UART_RX_EB_EG1 0x02
 /* USER CODE END EM */
 
 /* Exported functions prototypes ---------------------------------------------*/
@@ -68,6 +68,12 @@ void Error_Handler(void);
 /* USER CODE END EFP */
 
 /* Private defines -----------------------------------------------------------*/
+#define SX_RST_Pin LL_GPIO_PIN_3
+#define SX_RST_GPIO_Port GPIOA
+#define SPI1_CS_Pin LL_GPIO_PIN_4
+#define SPI1_CS_GPIO_Port GPIOA
+#define SX_DIO_Pin LL_GPIO_PIN_4
+#define SX_DIO_GPIO_Port GPIOC
 /* USER CODE BEGIN Private defines */
 
 /* USER CODE END Private defines */

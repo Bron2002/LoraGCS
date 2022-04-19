@@ -1,0 +1,18 @@
+[submodule "SX1278"]
+	path = SX1278
+	url = https://github.com/wdomski/SX1278.git
+[submodule "modules/SX1278"]
+	path = modules/SX1278
+	url = https://github.com/wdomski/SX1278.git
+[submodule "modules/FreertosIO"]
+	path = modules/FreertosIO
+	url = /home/bronislav/E/Embedded/stm32/modules/FreertosIO
+[submodule "modules/FreeRTOS-Plus-CLI"]
+	path = modules/FreeRTOS-Plus-CLI
+	url = /home/bronislav/E/Embedded/stm32/modules/FreeRTOS-Plus-CLI
+[submodule "modules/CLI_Task_commands"]
+	path = modules/CLI_Task_commands
+	url = /home/bronislav/E/Embedded/stm32/modules/CLI_Task_commands
+[submodule "modules/LoRa"]
+	path = modules/LoRa
+	url = /home/bronislav/E/Embedded/stm32/modules/LoRa
