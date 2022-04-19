@@ -53,7 +53,7 @@ include_directories(${includes})
 add_definitions(${defines})
 
 file(GLOB_RECURSE SOURCES ${sources})
-
+include(modules.cmake)
 set(LINKER_SCRIPT $${CMAKE_SOURCE_DIR}/${linkerScript})
 
 add_link_options(-Wl,-gc-sections,--print-memory-usage,-Map=$${PROJECT_BINARY_DIR}/$${PROJECT_NAME}.map)

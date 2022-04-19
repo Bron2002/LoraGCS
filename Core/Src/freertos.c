@@ -25,11 +25,15 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usart.h"
+#include "stdio.h"
+#include "SX1278.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
 typedef StaticTask_t osStaticThreadDef_t;
+typedef StaticSemaphore_t osStaticMutexDef_t;
+typedef StaticEventGroup_t osStaticEventGroupDef_t;
 /* USER CODE BEGIN PTD */
 
 /* USER CODE END PTD */
@@ -46,7 +50,8 @@ typedef StaticTask_t osStaticThreadDef_t;
 
 /* Private variables ---------------------------------------------------------*/
 /* USER CODE BEGIN Variables */
-
+extern SX1278_hw_t sx1278Hw;
+extern SX1278_t sx1278;
 /* USER CODE END Variables */
 /* Definitions for defaultTask */
 osThreadId_t defaultTaskHandle;
@@ -60,17 +65,53 @@ const osThreadAttr_t defaultTask_attributes = {
   .stack_size = sizeof(defaultTaskBuffer),
   .priority = (osPriority_t) osPriorityNormal,
 };
-/* Definitions for myTask02 */
-osThreadId_t myTask02Handle;
+/* Definitions for LoRaTask */
+osThreadId_t LoRaTaskHandle;
 uint32_t myTask02Buffer[ 128 ];
 osStaticThreadDef_t myTask02ControlBlock;
-const osThreadAttr_t myTask02_attributes = {
-  .name = "myTask02",
+const osThreadAttr_t LoRaTask_attributes = {
+  .name = "LoRaTask",
   .cb_mem = &myTask02ControlBlock,
   .cb_size = sizeof(myTask02ControlBlock),
   .stack_mem = &myTask02Buffer[0],
   .stack_size = sizeof(myTask02Buffer),
+  .priority = (osPriority_t) osPriorityNormal,
+};
+/* Definitions for commandConsole */
+osThreadId_t commandConsoleHandle;
+uint32_t commandConsoleBuffer[ 1024 ];
+osStaticThreadDef_t commandConsoleControlBlock;
+const osThreadAttr_t commandConsole_attributes = {
+  .name = "commandConsole",
+  .cb_mem = &commandConsoleControlBlock,
+  .cb_size = sizeof(commandConsoleControlBlock),
+  .stack_mem = &commandConsoleBuffer[0],
+  .stack_size = sizeof(commandConsoleBuffer),
   .priority = (osPriority_t) osPriorityLow,
+};
+/* Definitions for printfMutex */
+osMutexId_t printfMutexHandle;
+osStaticMutexDef_t printfMutexControlBlock;
+const osMutexAttr_t printfMutex_attributes = {
+  .name = "printfMutex",
+  .cb_mem = &printfMutexControlBlock,
+  .cb_size = sizeof(printfMutexControlBlock),
+};
+/* Definitions for spi1Mutex */
+osMutexId_t spi1MutexHandle;
+osStaticMutexDef_t spi1MutexControlBlock;
+const osMutexAttr_t spi1Mutex_attributes = {
+  .name = "spi1Mutex",
+  .cb_mem = &spi1MutexControlBlock,
+  .cb_size = sizeof(spi1MutexControlBlock),
+};
+/* Definitions for eventGroup1 */
+osEventFlagsId_t eventGroup1Handle;
+osStaticEventGroupDef_t myEvent01ControlBlock;
+const osEventFlagsAttr_t eventGroup1_attributes = {
+  .name = "eventGroup1",
+  .cb_mem = &myEvent01ControlBlock,
+  .cb_size = sizeof(myEvent01ControlBlock),
 };
 
 /* Private function prototypes -----------------------------------------------*/
@@ -79,7 +120,8 @@ const osThreadAttr_t myTask02_attributes = {
 /* USER CODE END FunctionPrototypes */
 
 void StartDefaultTask(void *argument);
-void StartTask02(void *argument);
+extern void StartLoRaTask(void *argument);
+extern void vCommandConsoleTask(void *argument);
 
 void MX_FREERTOS_Init(void); /* (MISRA C 2004 rule 8.1) */
 
@@ -92,6 +134,12 @@ void MX_FREERTOS_Init(void) {
   /* USER CODE BEGIN Init */
 
   /* USER CODE END Init */
+  /* Create the mutex(es) */
+  /* creation of printfMutex */
+  printfMutexHandle = osMutexNew(&printfMutex_attributes);
+
+  /* creation of spi1Mutex */
+  spi1MutexHandle = osMutexNew(&spi1Mutex_attributes);
 
   /* USER CODE BEGIN RTOS_MUTEX */
   /* add mutexes, ... */
@@ -113,12 +161,18 @@ void MX_FREERTOS_Init(void) {
   /* creation of defaultTask */
   defaultTaskHandle = osThreadNew(StartDefaultTask, NULL, &defaultTask_attributes);
 
-  /* creation of myTask02 */
-  myTask02Handle = osThreadNew(StartTask02, NULL, &myTask02_attributes);
+  /* creation of LoRaTask */
+  LoRaTaskHandle = osThreadNew(StartLoRaTask, NULL, &LoRaTask_attributes);
+
+  /* creation of commandConsole */
+  commandConsoleHandle = osThreadNew(vCommandConsoleTask, NULL, &commandConsole_attributes);
 
   /* USER CODE BEGIN RTOS_THREADS */
   /* add threads, ... */
   /* USER CODE END RTOS_THREADS */
+
+  /* creation of eventGroup1 */
+  eventGroup1Handle = osEventFlagsNew(&eventGroup1_attributes);
 
   /* USER CODE BEGIN RTOS_EVENTS */
   /* add events, ... */
@@ -136,30 +190,21 @@ void MX_FREERTOS_Init(void) {
 void StartDefaultTask(void *argument)
 {
   /* USER CODE BEGIN StartDefaultTask */
-  /* Infinite loop */
+    SX1278_init(&sx1278, 500000000,
+                SX1278_POWER_11DBM,
+                SX1278_LORA_SF_6,
+                SX1278_LORA_BW_20_8KHZ,
+                SX1278_LORA_CR_4_6,
+                SX1278_LORA_CRC_EN,
+                250);
+
+    /* Infinite loop */
   for(;;)
   {
-    osDelay(1);
+      osDelay(1000);
+      GPIOC->ODR ^= 1 << 9;
   }
   /* USER CODE END StartDefaultTask */
-}
-
-/* USER CODE BEGIN Header_StartTask02 */
-/**
-* @brief Function implementing the myTask02 thread.
-* @param argument: Not used
-* @retval None
-*/
-/* USER CODE END Header_StartTask02 */
-void StartTask02(void *argument)
-{
-  /* USER CODE BEGIN StartTask02 */
-  /* Infinite loop */
-  for(;;)
-  {
-    osDelay(1);
-  }
-  /* USER CODE END StartTask02 */
 }
 
 /* Private application code --------------------------------------------------*/
